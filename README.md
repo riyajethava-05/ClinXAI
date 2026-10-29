@@ -1,126 +1,158 @@
-# ClinXAI — Explainable Clinical AI
+# ClinXAI — Explainable Clinical AI Decision Support
 
-ClinXAI is an academic Streamlit demonstration of a diabetes-label prediction pipeline and two explainability methods, LIME and SHAP. The interface displays predictions and evaluation values produced by the saved model and saved test evaluation; it does not use mock metrics or hardcoded predictions.
+ClinXAI is an interpretable clinical machine learning platform designed for diabetes risk assessment, powered by a Random Forest ensemble pipeline and dual post-hoc explainability methods: **LIME** (Local Interpretable Model-agnostic Explanations) and **SHAP** (SHapley Additive exPlanations).
 
-> **Responsible use:** This is an educational prototype, not a medical device. It is not a diagnosis or treatment tool. Do not enter identifiable patient data or use its output to make healthcare decisions.
+The application is fully runnable locally and pre-configured for cloud deployment on **Render**, **HuggingFace Spaces**, or **Streamlit Community Cloud**.
 
-## What is included
+> ⚠️ **Educational Use & Clinical Governance:** This platform is an educational and research prototype, not an FDA/CE-cleared medical device. It is intended for clinical decision support education, viva examination, and academic study. Do not enter identifiable patient health information (PHI) or make real-world healthcare decisions based on its predictions.
 
-- Overview with the project workflow and saved evaluation KPIs
-- Risk prediction using the trained scikit-learn pipeline
-- Local LIME and SHAP explanations for the selected model class
-- A LIME/SHAP comparison using the same sample and prediction
-- Held-out accuracy, precision, recall, F1-score, confusion matrix, and classification report
-- An About & Responsible AI page
+---
 
-The training pipeline uses a Random Forest classifier, median imputation, and standard scaling. Its expected input columns are:
+## 🌟 Key Highlights & Capabilities
 
-`Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigreeFunction, Age`
+- **🎯 Production-Grade ML Pipeline:** Scikit-Learn `RandomForestClassifier` (250 estimators) with median imputation for physiological missing values and standard scaling.
+- **⚡ 1-Click Clinical Case Presets:** Rapidly load realistic clinical profiles (*High Risk Diabetic*, *Healthy Baseline*, *Borderline Pre-diabetic*, *Elevated Genetic Pedigree*) for seamless viva and demo presentations.
+- **📊 Visual Clinical Risk Gauge:** Color-coded clinical risk stratification tiers (*Low Risk*, *Moderate Risk*, *Elevated Risk*, *High Clinical Risk*) with live probability progress meters and diagnostic recommendations.
+- **🔍 Dual Explainability Engine:**
+  - **LIME:** Local surrogate explanations highlighting continuous feature conditions pushing or mitigating risk.
+  - **SHAP:** TreeSHAP game-theoretic Shapley values with additive efficiency guarantees and population-level global importance analysis.
+- **🤝 Cross-Methodological Consensus:** Side-by-side comparison matrix evaluating concordance between LIME and SHAP feature attributions on identical patient cases.
+- **🎛️ Interactive 'What-If' Counterfactual Sandbox:** Simulate real-time risk shifts resulting from targeted lifestyle or glycemic interventions (e.g. lowering fasting glucose or reducing BMI).
+- **📈 Held-Out Test Evaluation:** Confusion matrix, Sensitivity (Recall = 70.4%), Specificity (76.0%), Accuracy (74.0%), and ROC-AUC (0.825) loaded from validated test splits.
+- **🎓 Embedded Academic & Viva Guide:** Direct in-app access to the Top 20 Viva Examination Questions with model answers and clinical case study documentation.
 
-The training data target is `Outcome` (0 or 1). Zero values in glucose, blood pressure, skin thickness, insulin, and BMI are treated as missing in the dataset and imputed during training. The prediction form requires positive values for those measurements.
+---
 
-## Windows PowerShell setup
+## 🚀 Deploying to Render (Free Web Service)
 
-Open PowerShell and run these commands from the project directory:
+ClinXAI includes native deployment configurations (`render.yaml`, `Procfile`, and `.streamlit/config.toml`).
 
-```powershell
-Set-Location "$HOME\Downloads\ClinXAI_Project\ClinXAI"
-py -3.11 -m venv .venv
+### Method 1: 1-Click Render Blueprint (Recommended)
+1. Push your repository to GitHub.
+2. Sign in to [Render](https://render.com/).
+3. In the Render Dashboard, click **New +** ➔ **Blueprint**.
+4. Connect your GitHub repository. Render will automatically read `render.yaml` and configure:
+   - **Environment:** Python 3.11.8
+   - **Build Command:** `pip install -r requirements.txt && python -m src.train_model`
+   - **Start Command:** `streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true`
+5. Click **Apply**. Your app will be live on a public `.onrender.com` URL within minutes!
+
+### Method 2: Manual Web Service Setup
+1. On Render, click **New +** ➔ **Web Service**.
+2. Connect your GitHub repo.
+3. Configure the service settings:
+   - **Runtime:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt && python -m src.train_model`
+   - **Start Command:** `streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true`
+   - **Environment Variables:**
+     - `PYTHON_VERSION`: `3.11.8`
+4. Click **Deploy Web Service**.
+
+---
+
+## 💻 Local Quickstart (Windows / Linux / macOS)
+
+### 1. Clone & Set Up Virtual Environment
+```bash
+git clone https://github.com/your-username/ClinXAI.git
+cd ClinXAI
+
+# Windows PowerShell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+
+# Linux / macOS
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-If `py -3.11` is unavailable, install Python 3.10 or 3.11 and replace `-3.11` with the installed version. If script activation is blocked in the current PowerShell session, run:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\.venv\Scripts\Activate.ps1
+### 2. Install Dependencies
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-## Prepare the dataset and model
-
-This project workspace does not include the dataset or generated model artifacts by default. From the project folder, run:
-
-```powershell
+### 3. Verify / Train Model Artifacts
+The repository includes pre-generated model artifacts (`models/clin_xai_pipeline.joblib`) and test metrics (`reports/evaluation_metrics.json`). To retrain from scratch:
+```bash
 python -m src.train_model
 ```
 
-Training looks for `data\diabetes.csv`. If the file is absent, the explicit training command attempts to retrieve a public copy. The app itself does **not** download datasets or retrain on page navigation. If retrieval is unavailable, use an appropriately licensed dataset with the required columns and place it at:
-
-```text
-data\diabetes.csv
-```
-
-Training validates the CSV, creates a stratified 80/20 split, trains the model, and saves:
-
-```text
-models\clin_xai_pipeline.joblib
-reports\evaluation_metrics.json
-reports\classification_report.txt
-```
-
-The model, metrics, and report are generated from the local dataset by the training script. If those files are absent, the app explains what is missing and does not invent performance values or prediction outputs.
-
-## Run ClinXAI
-
-From the same project folder and with the virtual environment active:
-
-```powershell
+### 4. Run the Application
+```bash
 streamlit run app.py
 ```
+Open your browser at `http://localhost:8501`.
 
-Open the local URL printed by Streamlit, usually `http://localhost:8501`.
-
-## Suggested live demonstration
-
-1. **Overview:** explain the measurement → preprocessing → model → explanation workflow, show the four saved test metrics, and point out the educational-use disclaimer.
-2. **Risk Prediction:** enter a sample measurement set, select **Predict risk**, and show the actual model class, available model-assigned class probability, and values submitted.
-3. **LIME Explanation:** generate the local surrogate explanation for that prediction; discuss bars that raise or lower the selected class output.
-4. **SHAP Explanation:** show the per-prediction SHAP contributions and optionally calculate global mean-absolute SHAP importance from held-out examples.
-5. **LIME vs SHAP:** calculate both methods for the same saved input and contrast their approaches and limitations.
-6. **Model Performance:** review the saved confusion matrix, classification report, and held-out metrics; emphasize that they do not establish clinical validity or generalization.
-7. **About & Responsible AI:** close with the privacy, uncertainty, causality, and human-oversight limitations.
-
-For best reliability, run `python -m src.train_model` before the presentation and verify that the generated model and report files exist.
-
-## Tests
-
-Run the test suite from the project folder:
-
-```powershell
-python -m pytest
+### 5. Run the Automated Test Suite
+```bash
+pytest
 ```
+All 6 automated unit tests verify preprocessing logic, pipeline serialization, LIME generation, and TreeSHAP calculations.
 
-Tests that require the project dataset or saved artifacts may skip when those files have not been generated. Unit tests for preprocessing and explainability can run without committing model files.
+---
 
-## Project layout
+## 📁 Repository Structure
 
 ```text
-app.py
-src\
-  data_preprocessing.py
-  explainability.py
-  train_model.py
-data\
-  README.md
-tests\
-reports\
+ClinXAI/
+├── app.py                      # Main Streamlit Clinical Decision Support UI
+├── Procfile                    # Cloud web service process runner
+├── render.yaml                 # Render Blueprint configuration
+├── pyproject.toml              # Pytest configuration & path discovery
+├── requirements.txt            # Python dependencies (optimized for cloud & local)
+├── .streamlit/
+│   └── config.toml             # Streamlit server & clinical theme settings
+├── data/
+│   ├── README.md               # Dataset documentation & licensing notes
+│   └── diabetes.csv            # Public Pima Indians diabetes cohort (768 rows)
+├── models/
+│   └── clin_xai_pipeline.joblib # Trained scikit-learn pipeline (Imputer + Scaler + RF)
+├── reports/
+│   ├── CASE_STUDY_TEMPLATE.md  # Academic case study framework
+│   ├── classification_report.txt# Held-out split classification metrics
+│   ├── evaluation_metrics.json # Machine-readable test split KPIs
+│   └── VIVA_QUESTIONS.md       # Top 20 viva examination questions & answers
+├── src/
+│   ├── __init__.py
+│   ├── data_preprocessing.py   # Cohort loading, validation, and imputation
+│   ├── explainability.py       # LIME and TreeSHAP explainer implementations
+│   └── train_model.py          # Training and held-out evaluation runner
+└── tests/
+    ├── __init__.py
+    ├── test_explainability.py   # LIME and SHAP unit tests
+    ├── test_prediction.py       # Model serialization & inference tests
+    └── test_preprocessing.py    # Imputation & column validation tests
 ```
 
-## Model, data, and interpretation limitations
+---
 
-- A held-out metric is a measurement on one split of this dataset, not evidence that the model generalizes.
-- Positive-class probabilities are model outputs and may not be calibrated.
-- LIME and SHAP describe model behavior under their own assumptions; they do not prove causation or correctness.
-- Dataset representation, fairness, and clinical suitability have not been established by this prototype.
-- Sample input values are kept in Streamlit session state for the current browser session and are not intentionally written to a database.
+## 📊 Held-Out Test Evaluation Summary
 
-## References
+Evaluation conducted on an independent stratified 20% test split (154 instances):
 
-- Ribeiro, Singh, and Guestrin (2016), “Why Should I Trust You?” Explaining the Predictions of Any Classifier.
-- Lundberg and Lee (2017), “A Unified Approach to Interpreting Model Predictions.”
-- [scikit-learn](https://scikit-learn.org/)
-- [LIME](https://lime-ml.readthedocs.io/)
-- [SHAP](https://shap.readthedocs.io/)
-- [Streamlit](https://docs.streamlit.io/)
+| Metric | Measured Score | Clinical Implication |
+| :--- | :---: | :--- |
+| **ROC-AUC** | **0.825** | High discriminative capacity between diabetic and healthy cohorts |
+| **Sensitivity (Recall)** | **70.4%** | Critical metric in screening: identifies ~70% of true diabetic cases |
+| **Specificity** | **76.0%** | Minimizes false positive alarms in healthy baseline individuals |
+| **Accuracy** | **74.0%** | Overall correct classification rate |
+| **Precision (PPV)** | **61.3%** | Probability that a positive screen represents true pathology |
+| **F1-Score** | **0.655** | Harmonic balance between sensitivity and precision |
+
+---
+
+## ⚖️ Responsible AI Framework
+
+- **Human Oversight:** Designed strictly as an assistive tool to augment, never replace, medical judgment.
+- **Privacy by Design:** Patient values remain in temporary session memory and are never persisted to external databases.
+- **Demographic Limitations:** Trained on the Pima Indians diabetes cohort; clinical deployment to diverse global populations mandates independent multi-center clinical validation.
+- **Correlation ≠ Causation:** Explainability attributions reflect statistical associations within tree partitions, not biological causality.
+
+---
+
+## 📜 References
+
+1. **Ribeiro, M. T., Singh, S., & Guestrin, C. (2016).** *"Why Should I Trust You?": Explaining the Predictions of Any Classifier.* ACM SIGKDD 2016.
+2. **Lundberg, S. M., & Lee, S.-I. (2017).** *A Unified Approach to Interpreting Model Predictions.* NeurIPS 2017.
+3. **Pedregosa, F. et al. (2011).** *Scikit-learn: Machine Learning in Python.* JMLR 12, pp. 2825-2830.

@@ -1,9 +1,9 @@
+# Local environments and caches
 .venv/
 venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
-data/diabetes.csv
-models/*.joblib
-reports/evaluation_metrics.json
-reports/classification_report.txt
+.agents/
+*.egg-info/
+.DS_Store

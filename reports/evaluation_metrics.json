@@ -1,0 +1,34 @@
+{
+  "dataset_rows": 768,
+  "train_rows": 614,
+  "test_rows": 154,
+  "features": [
+    "Pregnancies",
+    "Glucose",
+    "BloodPressure",
+    "SkinThickness",
+    "Insulin",
+    "BMI",
+    "DiabetesPedigreeFunction",
+    "Age"
+  ],
+  "accuracy": 0.7402597402597403,
+  "precision": 0.6129032258064516,
+  "recall": 0.7037037037037037,
+  "f1_score": 0.6551724137931034,
+  "roc_auc": 0.8253703703703704,
+  "confusion_matrix": [
+    [
+      76,
+      24
+    ],
+    [
+      16,
+      38
+    ]
+  ],
+  "random_state": 42,
+  "model_name": "Random Forest classifier",
+  "dataset_file": "data/diabetes.csv",
+  "note": "Educational benchmark only; not clinically validated."
+}
